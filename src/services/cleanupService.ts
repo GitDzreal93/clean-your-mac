@@ -89,6 +89,108 @@ export class CleanupService {
     return { isValid: true };
   }
 
+  // 检查文件/目录权限
+  private async checkFilePermissions(path: string): Promise<{ hasAccess: boolean; error?: string }> {
+    try {
+      // 使用 test 命令检查文件是否存在和可访问
+      try {
+        await executeCleanupCommand(`test -e "${path}"`);
+      } catch {
+        return { hasAccess: false, error: '文件或目录不存在' };
+      }
+
+      // 检查读权限
+      try {
+        await executeCleanupCommand(`test -r "${path}"`);
+      } catch {
+        return { hasAccess: false, error: '没有读权限' };
+      }
+
+      // 检查写权限（对于删除操作很重要）
+      try {
+        await executeCleanupCommand(`test -w "${path}"`);
+      } catch {
+        return { hasAccess: false, error: '没有写权限' };
+      }
+
+      return { hasAccess: true };
+    } catch (error) {
+      return { hasAccess: false, error: `权限检查失败: ${error}` };
+    }
+  }
+
+  // 根据命令内容推断清理类型
+  private inferCleanupType(command: string): string {
+    const lowerCommand = command.toLowerCase();
+    if (lowerCommand.includes('cache')) return 'cache';
+    if (lowerCommand.includes('download')) return 'downloads';
+    if (lowerCommand.includes('trash')) return 'trash';
+    if (lowerCommand.includes('log')) return 'logs';
+    if (lowerCommand.includes('tmp') || lowerCommand.includes('temp')) return 'temp';
+    return 'unknown';
+  }
+
+  // 检查清理项目的权限
+  private async checkCleanupItemPermissions(item: CleanupItem): Promise<{ canProceed: boolean; warnings: string[] }> {
+    const warnings: string[] = [];
+    let canProceed = true;
+
+    try {
+      // 根据清理项目命令推断类型并提取目标路径
+      const cleanupType = this.inferCleanupType(item.command);
+      let targetPaths: string[] = [];
+      
+      if (cleanupType === 'cache') {
+        targetPaths = ['~/Library/Caches', '~/Library/Application Support'];
+      } else if (cleanupType === 'downloads') {
+        targetPaths = ['~/Downloads'];
+      } else if (cleanupType === 'trash') {
+        targetPaths = ['~/.Trash'];
+      } else if (cleanupType === 'logs') {
+        targetPaths = ['~/Library/Logs', '/var/log'];
+      } else if (cleanupType === 'temp') {
+        targetPaths = ['/tmp', '~/Library/Caches/TemporaryItems'];
+      }
+
+      // 检查每个路径的权限
+      for (const path of targetPaths) {
+        const homeDir = typeof window !== 'undefined' ? '' : ((globalThis as any).process?.env?.HOME || '/Users/' + ((globalThis as any).process?.env?.USER || 'user'));
+        const expandedPath = path.replace('~', homeDir);
+        const permissionResult = await this.checkFilePermissions(expandedPath);
+        
+        if (!permissionResult.hasAccess) {
+          warnings.push(`${path}: ${permissionResult.error}`);
+          // 对于关键路径，如果没有权限则不能继续
+          if (path.includes('System') || path.includes('/var/') || path.includes('/usr/')) {
+            canProceed = false;
+          }
+        }
+      }
+
+      // 特殊检查：系统保护的目录
+      const protectedPaths = [
+        '/System',
+        '/usr/bin',
+        '/usr/sbin',
+        '/Library/Apple',
+        '/Library/System'
+      ];
+
+      for (const protectedPath of protectedPaths) {
+        if (item.command && item.command.includes(protectedPath)) {
+          warnings.push(`警告: 命令涉及系统保护目录 ${protectedPath}，可能需要管理员权限`);
+          canProceed = false;
+        }
+      }
+
+    } catch (error) {
+      warnings.push(`权限检查过程中发生错误: ${error}`);
+      canProceed = false;
+    }
+
+    return { canProceed, warnings };
+  }
+
   // 非阻塞执行清理操作
   async executeCleanupAsync(
     selectedItems: CleanupItem[],
@@ -121,6 +223,21 @@ export class CleanupService {
         errors.push(errorMsg);
         onItemComplete?.(item, false, errorMsg);
         continue;
+      }
+
+      // 检查文件权限
+      const permissionCheck = await this.checkCleanupItemPermissions(item);
+      if (!permissionCheck.canProceed) {
+        console.warn(`跳过权限不足的清理项: ${item.command}`);
+        const errorMsg = `${item.description}: 权限不足 - ${permissionCheck.warnings.join(', ')}`;
+        errors.push(errorMsg);
+        onItemComplete?.(item, false, errorMsg);
+        continue;
+      }
+      
+      // 如果有权限警告，记录但继续执行
+      if (permissionCheck.warnings.length > 0) {
+        console.warn(`权限警告: ${item.description}`, permissionCheck.warnings);
       }
 
       try {
@@ -215,7 +332,20 @@ export class CleanupService {
         console.log(`✅ [清理服务] 清理成功: ${item.description}`);
       } catch (error) {
         console.error(`❌ [清理服务] 清理失败: ${item.description}`, error);
-        const errorMsg = `${item.description}: 执行失败`;
+        
+        // 为快照相关错误提供更详细的提示
+        let errorMsg = `${item.description}: 执行失败`;
+        if (item.command.includes('tmutil') && item.command.includes('snapshot')) {
+          const errorStr = error instanceof Error ? error.message : String(error);
+          if (errorStr.includes('com.apple.os.update') || errorStr.includes('Failed to delete')) {
+            errorMsg = `${item.description}: 系统更新快照无法删除，这些快照由macOS自动管理，建议重启系统后再次检查`;
+          } else if (errorStr.includes('permission') || errorStr.includes('not permitted')) {
+            errorMsg = `${item.description}: 权限不足，请确保应用有完全磁盘访问权限`;
+          } else {
+            errorMsg = `${item.description}: 快照清理失败，可能是系统保护的快照或权限问题`;
+          }
+        }
+        
         errors.push(errorMsg);
         console.log(`❌ [清理服务] 失败详情:`, errorMsg);
       }

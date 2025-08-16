@@ -41,15 +41,45 @@ const CleanupResult: React.FC<CleanupResultProps> = ({
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         {/* 成功结果展示 */}
         <Result
-          icon={<TrophyOutlined style={{ color: '#52c41a' }} />}
+          icon={<TrophyOutlined style={{ color: '#ffffff', fontSize: '48px', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }} />}
           status="success"
-          title="清理完成！"
-          subTitle={`成功释放了 ${freedSpaceGB.toFixed(1)} GB 磁盘空间，让您的Mac运行更流畅`}
+          title={
+            <span style={{
+              color: '#ffffff',
+              fontSize: '32px',
+              fontWeight: 'bold',
+              textShadow: '0 2px 8px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3)',
+              letterSpacing: '1px'
+            }}>
+              清理完成！
+            </span>
+          }
+          subTitle={
+            <span style={{
+              color: '#ffffff',
+              fontSize: '18px',
+              fontWeight: '500',
+              textShadow: '0 1px 6px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2)',
+              lineHeight: '1.6',
+              display: 'block',
+              marginTop: '8px'
+            }}>
+              成功释放了 {freedSpaceGB.toFixed(1)} GB 磁盘空间，让您的Mac运行更流畅
+            </span>
+          }
           style={{
-            background: 'white',
+            backgroundImage: 'url("/src/assets/images/backgrounds/result_bg.webp")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
             borderRadius: '12px',
             marginBottom: '24px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+            boxShadow: '0 4px 20px rgba(168, 230, 207, 0.3), 0 8px 40px rgba(168, 230, 207, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(10px)',
+            position: 'relative',
+            overflow: 'hidden',
+            padding: '40px 20px'
           }}
         />
 

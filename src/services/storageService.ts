@@ -166,12 +166,26 @@ export class StorageService {
     try {
       const snapshotDetails = await getSnapshotDetails();
       console.log('✅ [存储服务] 快照详情获取完成，数量:', snapshotDetails.length);
+      
       if (snapshotDetails.length > 0) {
-        console.log('📋 [存储服务] 快照列表:', snapshotDetails.map(s => `${s.name}: ${s.size}`).slice(0, 3));
+        const systemUpdateSnapshots = snapshotDetails.filter(s => s.name.includes('com.apple.os.update'));
+        const regularSnapshots = snapshotDetails.filter(s => !s.name.includes('com.apple.os.update'));
+        
+        console.log('📋 [存储服务] 快照分类统计:');
+        console.log(`  - 系统更新快照: ${systemUpdateSnapshots.length} 个（无法手动删除）`);
+        console.log(`  - 普通快照: ${regularSnapshots.length} 个（可以清理）`);
+        
+        if (systemUpdateSnapshots.length > 0) {
+          console.log('⚠️ [存储服务] 检测到系统更新快照，这些快照由macOS自动管理，无法手动删除');
+        }
+        
+        console.log('📋 [存储服务] 快照列表预览:', snapshotDetails.map(s => `${s.name}: ${s.size}`).slice(0, 3));
       }
+      
       return snapshotDetails;
     } catch (error) {
       console.error('❌ [存储服务] 获取快照详情失败:', error);
+      console.log('💡 [存储服务] 快照获取失败可能原因: 权限不足或系统限制，请确保应用有完全磁盘访问权限');
       return [];
     }
   }

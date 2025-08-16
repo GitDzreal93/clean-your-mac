@@ -115,15 +115,27 @@ export async function getSnapshotDetails(): Promise<Array<{name: string, size: s
     const snapshotDetails = await Promise.all(
       snapshots.map(async (snapshot) => {
         try {
-          // 使用 tmutil 获取快照大小
-          const sizeResult = await invoke('execute_command', {
-            command: `tmutil calculatedrift "${snapshot}" 2>/dev/null | grep "Total size" | awk '{print $3 $4}' || echo "未知"`
-          });
-          const size = (sizeResult as string).trim() || '未知';
-          return { name: snapshot, size };
+          // 检查快照类型
+          if (snapshot.includes('com.apple.os.update')) {
+            // 系统更新快照，尝试使用 du 命令估算大小
+            const sizeResult = await invoke('execute_command', {
+              command: `du -sh "/.com.apple.TimeMachine.supported/${snapshot}" 2>/dev/null | awk '{print $1}' || echo "系统快照"`
+            });
+            const size = (sizeResult as string).trim() || '系统快照';
+            return { name: snapshot, size: size === '' ? '系统快照' : size };
+          } else {
+            // 普通快照，尝试使用 tmutil uniquesize
+            const sizeResult = await invoke('execute_command', {
+              command: `tmutil uniquesize "/.com.apple.TimeMachine.supported/${snapshot}" 2>/dev/null | tail -1 || echo "未知"`
+            });
+            const size = (sizeResult as string).trim() || '未知';
+            return { name: snapshot, size };
+          }
         } catch (error) {
           console.error(`获取快照 ${snapshot} 大小失败:`, error);
-          return { name: snapshot, size: '未知' };
+          // 根据快照类型返回不同的默认值
+          const defaultSize = snapshot.includes('com.apple.os.update') ? '系统快照' : '未知';
+          return { name: snapshot, size: defaultSize };
         }
       })
     );

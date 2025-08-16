@@ -71,7 +71,7 @@ const HomePage: React.FC<HomePageProps> = ({ isAnalyzing, onStartAnalysis, onGoT
             WebkitTextStroke: '0.5px rgba(0, 0, 0, 0.2)',
             letterSpacing: '0.5px'
           }}>
-            CleanMyMac AI Lite
+            CleanYourMac AI Lite
           </Text>
         </div>
 
