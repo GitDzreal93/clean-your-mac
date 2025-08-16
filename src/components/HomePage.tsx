@@ -76,40 +76,37 @@ const HomePage: React.FC<HomePageProps> = ({ isAnalyzing, onStartAnalysis, onGoT
         </div>
 
         {/* 主要操作按钮 */}
-        <Button
-          type="primary"
-          size="large"
-          icon={isAnalyzing ? <Spin size="small" /> : <ScanOutlined />}
-          onClick={handleAnalyze}
-          disabled={isAnalyzing}
-          style={{
-            height: '60px',
-            fontSize: '20px',
-            fontWeight: 700,
-            borderRadius: '30px',
-            padding: '0 40px',
-            background: isAnalyzing ? '#1890ff' : '#52c41a',
-            borderColor: isAnalyzing ? '#1890ff' : '#52c41a',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.1)',
-            textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
-            letterSpacing: '0.5px',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            if (!isAnalyzing) {
+        {!isAnalyzing && (
+          <Button
+            type="primary"
+            size="large"
+            icon={<ScanOutlined />}
+            onClick={handleAnalyze}
+            style={{
+              height: '60px',
+              fontSize: '20px',
+              fontWeight: 700,
+              borderRadius: '30px',
+              padding: '0 40px',
+              background: '#52c41a',
+              borderColor: '#52c41a',
+              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.1)',
+              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+              letterSpacing: '0.5px',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.05)';
               e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isAnalyzing) {
+            }}
+            onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
               e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
-            }
-          }}
-        >
-          {isAnalyzing ? '正在深度扫描您的磁盘，请稍候...' : '智能分析'}
-        </Button>
+            }}
+          >
+            智能分析
+          </Button>
+        )}
 
         {/* 数据收集进度提示 */}
         {isAnalyzing && (
