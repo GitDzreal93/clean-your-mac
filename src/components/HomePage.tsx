@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Typography, Space, Spin, Progress } from 'antd';
+import { Button, Typography, Space } from 'antd';
 import { ScanOutlined, SettingOutlined } from '@ant-design/icons';
 import { mainBackground } from '../assets';
 

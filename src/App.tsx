@@ -5,9 +5,8 @@ import HomePage from './components/HomePage';
 import AnalysisReport from './components/AnalysisReport';
 import CleanupExecution from './components/CleanupExecution';
 import CleanupResult from './components/CleanupResult';
-
 import SettingsPage from './components/SettingsPage';
-import { AppState, DiskInfo, AnalysisResult, CleanupResult as CleanupResultType, CleanupItem, AppConfig } from './types';
+import { AppState, AnalysisResult, CleanupItem, AppConfig } from './types';
 import { StorageService } from './services/storageService';
 import { AIService } from './services/aiService';
 import { CleanupService } from './services/cleanupService';
@@ -247,13 +246,7 @@ const App: React.FC = () => {
     cleanupService.setWhitelist(config.whitelist);
   };
 
-  const handleBackToAnalysis = () => {
-    setAppState(prev => ({
-      ...prev,
-      currentPage: 'analysis',
-      isCleaning: false
-    }));
-  };
+
 
   const handleApiKeySubmit = async () => {
     if (!apiKeyInput.trim()) {

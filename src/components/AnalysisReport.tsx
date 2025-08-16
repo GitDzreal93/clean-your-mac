@@ -1,8 +1,8 @@
 import React from 'react';
-import { Card, Row, Col, Statistic, Progress, Typography, List, Tag, Checkbox, Affix, Button, Space } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Typography, List, Tag, Checkbox, Affix, Button } from 'antd';
 import { ExclamationCircleOutlined, WarningOutlined, CheckCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { AnalysisResult, CleanupItem, RiskLevel } from '../types';
-import { mainBackground } from '../assets';
+import reportBg from '../assets/images/backgrounds/report_bg.webp';
 
 const { Paragraph, Title } = Typography;
 
@@ -85,7 +85,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({
   return (
     <div style={{ 
       minHeight: '100vh',
-      backgroundImage: `url(${mainBackground})`,
+      backgroundImage: `url(${reportBg})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
@@ -218,6 +218,185 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({
           {analysisResult.aiAnalysis?.root_cause_analysis || '分析数据不可用'}
         </Paragraph>
       </Card>
+
+      {/* 快照空间分析卡片 */}
+      {analysisResult.systemData?.local_snapshots && analysisResult.systemData.local_snapshots.length > 0 && (
+        <Card 
+          title={<span style={{ color: '#00d4ff', fontSize: '18px', fontWeight: 600 }}>📸 快照空间分析</span>}
+          style={{
+            backgroundColor: 'rgba(0, 20, 40, 0.8)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(0, 212, 255, 0.3)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 212, 255, 0.1)',
+            marginBottom: '24px'
+          }}
+        >
+          {(() => {
+            const snapshots = analysisResult.systemData.local_snapshots;
+            const systemUpdateSnapshots = snapshots.filter(s => s.type === 'system_update');
+            const timeMachineSnapshots = snapshots.filter(s => s.type === 'time_machine');
+            const unknownSnapshots = snapshots.filter(s => s.type === 'unknown');
+            
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* 系统更新快照区域 - 不可操作 */}
+                {systemUpdateSnapshots.length > 0 && (
+                  <div style={{
+                    background: 'rgba(255, 193, 7, 0.1)',
+                    border: '1px solid rgba(255, 193, 7, 0.3)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    backdropFilter: 'blur(8px)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '20px', marginRight: '8px' }}>🔒</span>
+                      <span style={{ color: '#ffc107', fontSize: '16px', fontWeight: 600 }}>系统保护快照 (不可清理)</span>
+                    </div>
+                    <div style={{ color: '#ffffff', fontSize: '14px', lineHeight: '1.6', marginBottom: '12px' }}>
+                      检测到 <strong>{systemUpdateSnapshots.length}</strong> 个系统更新所创建的保护性快照。
+                    </div>
+                    <div style={{ color: '#e6f7ff', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
+                      这是 macOS 在进行系统更新时创建的"保险"，用于在更新失败时保护您的系统安全。它们是受系统保护的，无法被手动删除。
+                    </div>
+                    
+                    {/* 详细教育内容 */}
+                    <div style={{ marginBottom: '16px' }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        marginBottom: '12px',
+                        padding: '12px',
+                        background: 'rgba(255, 193, 7, 0.15)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 193, 7, 0.3)'
+                      }}>
+                        <span style={{ fontSize: '18px', marginRight: '12px', marginTop: '2px' }}>🛡️</span>
+                        <div>
+                          <div style={{ color: '#ffc107', fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>为什么不能删除？</div>
+                          <div style={{ color: '#ffffff', fontSize: '13px', lineHeight: '1.5' }}>
+                            这些快照是macOS系统更新的安全机制，确保更新失败时能够回滚到稳定状态。强制删除可能导致系统不稳定。
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        marginBottom: '12px',
+                        padding: '12px',
+                        background: 'rgba(255, 193, 7, 0.15)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 193, 7, 0.3)'
+                      }}>
+                        <span style={{ fontSize: '18px', marginRight: '12px', marginTop: '2px' }}>⚡</span>
+                        <div>
+                          <div style={{ color: '#ffc107', fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>如何让系统自动清理？</div>
+                          <div style={{ color: '#ffffff', fontSize: '13px', lineHeight: '1.5' }}>
+                            重启系统后，macOS会自动评估并清理不再需要的系统更新快照。这是最安全的清理方式。
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        padding: '12px',
+                        background: 'rgba(255, 193, 7, 0.15)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 193, 7, 0.3)'
+                      }}>
+                        <span style={{ fontSize: '18px', marginRight: '12px', marginTop: '2px' }}>⏰</span>
+                        <div>
+                          <div style={{ color: '#ffc107', fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>清理时机</div>
+                          <div style={{ color: '#ffffff', fontSize: '13px', lineHeight: '1.5' }}>
+                            通常在系统更新完成24-48小时后，如果系统运行稳定，这些快照会被自动清理。
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style={{
+                      background: 'rgba(255, 193, 7, 0.2)',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255, 193, 7, 0.4)'
+                    }}>
+                      <div style={{ color: '#ffc107', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>我该怎么办？</div>
+                      <div style={{ color: '#ffffff', fontSize: '13px', lineHeight: '1.5' }}>
+                        您无需任何操作。当系统确认更新已成功且运行稳定后，会自动在后台清理这些快照。您可以尝试以下操作来加速这个过程：
+                        <br />1. 前往"软件更新"，安装任何可用的新更新
+                        <br />2. 将您的 Mac 彻底"关机"，等待一分钟后再重新启动
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* 时间机器快照区域 - 可操作 */}
+                {timeMachineSnapshots.length > 0 && (
+                  <div style={{
+                    background: 'rgba(82, 196, 26, 0.1)',
+                    border: '1px solid rgba(82, 196, 26, 0.3)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    backdropFilter: 'blur(8px)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '20px', marginRight: '8px' }}>🧹</span>
+                      <span style={{ color: '#52c41a', fontSize: '16px', fontWeight: 600 }}>时间机器本地快照 (可安全清理)</span>
+                    </div>
+                    <div style={{ color: '#ffffff', fontSize: '14px', lineHeight: '1.6', marginBottom: '12px' }}>
+                      检测到 <strong>{timeMachineSnapshots.length}</strong> 个本地备份快照，这些快照占用了您的"可清除"空间。
+                    </div>
+                    <div style={{ color: '#e6f7ff', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
+                      这是"时间机器"为方便您恢复近期文件而创建的本地备份。清理它们是安全的，可以立即释放大量磁盘空间，但会移除近期的部分文件恢复点。
+                    </div>
+                    {timeMachineSnapshots.slice(0, 3).map((snapshot, index) => (
+                      <div key={index} style={{
+                        color: '#b7eb8f',
+                        fontSize: '12px',
+                        fontFamily: 'Monaco, Menlo, monospace',
+                        marginBottom: '4px'
+                      }}>
+                        • {snapshot.name}: {snapshot.size}
+                        {snapshot.createdDate && ` (${snapshot.createdDate})`}
+                      </div>
+                    ))}
+                    {timeMachineSnapshots.length > 3 && (
+                      <div style={{ color: '#b7eb8f', fontSize: '12px', marginTop: '8px' }}>
+                        ... 还有 {timeMachineSnapshots.length - 3} 个时间机器快照
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* 未知类型快照区域 */}
+                {unknownSnapshots.length > 0 && (
+                  <div style={{
+                    background: 'rgba(108, 117, 125, 0.1)',
+                    border: '1px solid rgba(108, 117, 125, 0.3)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    backdropFilter: 'blur(8px)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '20px', marginRight: '8px' }}>❓</span>
+                      <span style={{ color: '#6c757d', fontSize: '16px', fontWeight: 600 }}>未知类型快照 (建议保留)</span>
+                    </div>
+                    <div style={{ color: '#ffffff', fontSize: '14px', lineHeight: '1.6', marginBottom: '12px' }}>
+                      检测到 <strong>{unknownSnapshots.length}</strong> 个未知类型的快照。
+                    </div>
+                    <div style={{ color: '#e6f7ff', fontSize: '13px', lineHeight: '1.6' }}>
+                      为了系统稳定性，建议保留这些快照。它们可能是其他应用程序或系统功能创建的重要备份。
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()
+          }
+        </Card>
+      )}
 
       {/* 底部面板 - 清理方案 */}
       <Card 

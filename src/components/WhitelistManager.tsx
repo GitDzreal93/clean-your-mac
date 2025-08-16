@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, List, Button, Input, Modal, message, Space, Popconfirm, Typography } from 'antd';
 import { PlusOutlined, DeleteOutlined, FolderOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { WhitelistItem } from '../types';

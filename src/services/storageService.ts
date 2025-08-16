@@ -5,7 +5,6 @@ import {
   getCacheSize, 
   getDownloadsSize, 
   getTrashSize,
-  getLocalSnapshots,
   getSnapshotDetails,
   parseDiskUsage
 } from '../utils/commands';
@@ -168,18 +167,34 @@ export class StorageService {
       console.log('✅ [存储服务] 快照详情获取完成，数量:', snapshotDetails.length);
       
       if (snapshotDetails.length > 0) {
-        const systemUpdateSnapshots = snapshotDetails.filter(s => s.name.includes('com.apple.os.update'));
-        const regularSnapshots = snapshotDetails.filter(s => !s.name.includes('com.apple.os.update'));
+        const systemUpdateSnapshots = snapshotDetails.filter(s => s.type === 'system_update');
+        const timeMachineSnapshots = snapshotDetails.filter(s => s.type === 'time_machine');
+        const unknownSnapshots = snapshotDetails.filter(s => s.type === 'unknown');
+        const deletableSnapshots = snapshotDetails.filter(s => s.isDeletable);
         
-        console.log('📋 [存储服务] 快照分类统计:');
+        console.log('📋 [存储服务] 智能快照分类统计:');
         console.log(`  - 系统更新快照: ${systemUpdateSnapshots.length} 个（无法手动删除）`);
-        console.log(`  - 普通快照: ${regularSnapshots.length} 个（可以清理）`);
+        console.log(`  - 时间机器快照: ${timeMachineSnapshots.length} 个（可以清理）`);
+        console.log(`  - 未知类型快照: ${unknownSnapshots.length} 个（建议保留）`);
+        console.log(`  - 可删除快照总数: ${deletableSnapshots.length} 个`);
         
         if (systemUpdateSnapshots.length > 0) {
           console.log('⚠️ [存储服务] 检测到系统更新快照，这些快照由macOS自动管理，无法手动删除');
+          console.log('💡 [存储服务] 系统更新快照会在系统重启或更新完成后自动清理');
         }
         
-        console.log('📋 [存储服务] 快照列表预览:', snapshotDetails.map(s => `${s.name}: ${s.size}`).slice(0, 3));
+        if (timeMachineSnapshots.length > 0) {
+          console.log('🕒 [存储服务] 时间机器快照详情:');
+          timeMachineSnapshots.slice(0, 3).forEach(s => {
+            const dateInfo = s.createdDate ? ` (创建于: ${s.createdDate})` : '';
+            console.log(`    - ${s.name}: ${s.size}${dateInfo}`);
+          });
+          if (timeMachineSnapshots.length > 3) {
+            console.log(`    ... 还有 ${timeMachineSnapshots.length - 3} 个时间机器快照`);
+          }
+        }
+        
+        console.log('📋 [存储服务] 快照列表预览:', snapshotDetails.map(s => `${s.name}: ${s.size} [${s.type}]`).slice(0, 3));
       }
       
       return snapshotDetails;
@@ -270,13 +285,7 @@ ${trashSize}${snapshotInfo}
     return JSON.stringify(systemData, null, 2);
   }
 
-  private formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
+
 }
 
 export const storageService = new StorageService();

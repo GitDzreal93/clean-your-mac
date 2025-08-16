@@ -1,4 +1,4 @@
-import { getDiskUsage, getLargeFiles, getCacheSize, getDownloadsSize, getTrashSize, collectDiskInfo, getSnapshotDetails } from '../utils/commands';
+import { getLargeFiles, getCacheSize, getDownloadsSize, getTrashSize, collectDiskInfo, getSnapshotDetails } from '../utils/commands';
 import { DiskInfo, SnapshotDetail } from '../types';
 
 // Progress callback type

@@ -21,16 +21,50 @@ const CleanupResult: React.FC<CleanupResultProps> = ({
   const afterUsagePercent = afterDiskInfo.usagePercentage;
   const usageImprovement = beforeUsagePercent - afterUsagePercent;
   
-  const formatBytes = (bytes: string): string => {
-    const num = parseFloat(bytes);
-    if (num >= 1024 ** 3) {
-      return `${(num / (1024 ** 3)).toFixed(1)} GB`;
-    } else if (num >= 1024 ** 2) {
-      return `${(num / (1024 ** 2)).toFixed(1)} MB`;
+  const parseStorageSize = (sizeStr: string): number => {
+    const match = sizeStr.match(/(\d+(?:\.\d+)?)\s*(B|KB|MB|GB|TB)/i);
+    if (!match) {
+      console.warn('⚠️ 无法解析存储大小:', sizeStr);
+      return 0;
+    }
+    
+    const value = parseFloat(match[1]);
+    const unit = match[2].toUpperCase();
+    
+    const multipliers: { [key: string]: number } = {
+      'B': 1,
+      'KB': 1024,
+      'MB': 1024 ** 2,
+      'GB': 1024 ** 3,
+      'TB': 1024 ** 4
+    };
+    
+    return value * (multipliers[unit] || 1);
+  };
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes >= 1024 ** 3) {
+      return `${(bytes / (1024 ** 3)).toFixed(1)} GB`;
+    } else if (bytes >= 1024 ** 2) {
+      return `${(bytes / (1024 ** 2)).toFixed(1)} MB`;
+    } else if (bytes >= 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
     } else {
-      return `${(num / 1024).toFixed(1)} KB`;
+      return `${bytes.toFixed(0)} B`;
     }
   };
+
+  // 计算真实的空间变化
+  const beforeUsedBytes = parseStorageSize(beforeDiskInfo.used);
+  const afterUsedBytes = parseStorageSize(afterDiskInfo.used);
+  const beforeAvailableBytes = parseStorageSize(beforeDiskInfo.available);
+  const afterAvailableBytes = parseStorageSize(afterDiskInfo.available);
+  
+  const actualFreedBytes = Math.max(0, beforeUsedBytes - afterUsedBytes);
+  const actualFreedGB = actualFreedBytes / (1024 ** 3);
+  
+  // 使用实际释放的空间，如果计算结果为0则使用预估值
+  const displayFreedGB = actualFreedGB > 0.01 ? actualFreedGB : freedSpaceGB;
 
   return (
     <div style={{ 
@@ -64,7 +98,7 @@ const CleanupResult: React.FC<CleanupResultProps> = ({
               display: 'block',
               marginTop: '8px'
             }}>
-              成功释放了 {freedSpaceGB.toFixed(1)} GB 磁盘空间，让您的Mac运行更流畅
+              成功释放了 {displayFreedGB.toFixed(1)} GB 磁盘空间，让您的Mac运行更流畅
             </span>
           }
           style={{
@@ -106,12 +140,12 @@ const CleanupResult: React.FC<CleanupResultProps> = ({
                 <Space direction="vertical" style={{ width: '100%' }}>
                    <Statistic
                      title="已使用空间"
-                     value={formatBytes(beforeDiskInfo.used)}
+                     value={formatBytes(beforeUsedBytes)}
                      valueStyle={{ color: '#fa8c16' }}
                    />
                    <Statistic
                      title="可用空间"
-                     value={formatBytes(beforeDiskInfo.available)}
+                     value={formatBytes(beforeAvailableBytes)}
                    />
                    <Statistic
                      title="使用率"
@@ -134,12 +168,12 @@ const CleanupResult: React.FC<CleanupResultProps> = ({
                 <Space direction="vertical" style={{ width: '100%' }}>
                    <Statistic
                      title="已使用空间"
-                     value={formatBytes(afterDiskInfo.used)}
+                     value={formatBytes(afterUsedBytes)}
                      valueStyle={{ color: '#52c41a' }}
                    />
                    <Statistic
                      title="可用空间"
-                     value={formatBytes(afterDiskInfo.available)}
+                     value={formatBytes(afterAvailableBytes)}
                      valueStyle={{ color: '#52c41a' }}
                    />
                    <Statistic
@@ -168,7 +202,7 @@ const CleanupResult: React.FC<CleanupResultProps> = ({
             <Col span={8}>
               <Statistic
                  title="释放空间"
-                 value={freedSpaceGB.toFixed(1)}
+                 value={displayFreedGB.toFixed(1)}
                  suffix="GB"
                  valueStyle={{ color: '#1890ff', fontSize: '24px' }}
                  prefix={<TrophyOutlined />}

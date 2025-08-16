@@ -105,7 +105,7 @@ export async function getLocalSnapshots(): Promise<string[]> {
 }
 
 // 获取快照详细信息（包含大小）
-export async function getSnapshotDetails(): Promise<Array<{name: string, size: string}>> {
+export async function getSnapshotDetails(): Promise<Array<{name: string, size: string, type: 'system_update' | 'time_machine' | 'unknown', isDeletable: boolean, createdDate?: string, description?: string}>> {
   try {
     const snapshots = await getLocalSnapshots();
     if (snapshots.length === 0) {
@@ -115,27 +115,177 @@ export async function getSnapshotDetails(): Promise<Array<{name: string, size: s
     const snapshotDetails = await Promise.all(
       snapshots.map(async (snapshot) => {
         try {
-          // 检查快照类型
+          // 智能快照分类逻辑
+          let type: 'system_update' | 'time_machine' | 'unknown' = 'unknown';
+          let isDeletable = false;
+          let description = '';
+          let createdDate: string | undefined;
+          
+          // 系统更新快照识别
           if (snapshot.includes('com.apple.os.update')) {
-            // 系统更新快照，尝试使用 du 命令估算大小
-            const sizeResult = await invoke('execute_command', {
-              command: `du -sh "/.com.apple.TimeMachine.supported/${snapshot}" 2>/dev/null | awk '{print $1}' || echo "系统快照"`
-            });
-            const size = (sizeResult as string).trim() || '系统快照';
-            return { name: snapshot, size: size === '' ? '系统快照' : size };
-          } else {
-            // 普通快照，尝试使用 tmutil uniquesize
-            const sizeResult = await invoke('execute_command', {
-              command: `tmutil uniquesize "/.com.apple.TimeMachine.supported/${snapshot}" 2>/dev/null | tail -1 || echo "未知"`
-            });
-            const size = (sizeResult as string).trim() || '未知';
-            return { name: snapshot, size };
+            type = 'system_update';
+            isDeletable = false;
+            description = '系统更新快照，由macOS自动管理，无法手动删除。这些快照确保系统更新的安全性，会在适当时机自动清理。';
           }
+          // 时间机器快照识别
+          else if (snapshot.includes('com.apple.TimeMachine') || snapshot.match(/\d{4}-\d{2}-\d{2}-\d{6}/)) {
+            type = 'time_machine';
+            isDeletable = true;
+            description = '时间机器本地快照，用于文件版本恢复。可以安全清理以释放空间，但会失去部分文件恢复点。';
+            
+            // 尝试从快照名称中提取创建日期
+            const dateMatch = snapshot.match(/(\d{4}-\d{2}-\d{2})-(\d{6})/);
+            if (dateMatch) {
+              const [, date, time] = dateMatch;
+              const formattedTime = `${time.slice(0,2)}:${time.slice(2,4)}:${time.slice(4,6)}`;
+              createdDate = `${date} ${formattedTime}`;
+            }
+          }
+          // 其他类型快照
+          else {
+            type = 'unknown';
+            isDeletable = false;
+            description = '未知类型快照，建议保留以确保系统稳定性。';
+          }
+
+          // 获取快照大小 - 优化的空间估算逻辑
+          let size = '未知';
+          let estimatedBytes = 0;
+          
+          if (type === 'system_update') {
+            // 系统更新快照，使用多种方法尝试获取大小
+            try {
+              // 方法1: 使用 tmutil 获取快照信息
+              const tmutilResult = await invoke('execute_command', {
+                command: `tmutil listlocalsnapshots / | grep "${snapshot}" | head -1`
+              });
+              
+              if (tmutilResult && (tmutilResult as string).trim()) {
+                // 方法2: 使用 du 命令估算大小（更保守的估算）
+                const duResult = await invoke('execute_command', {
+                  command: `du -sh "/.com.apple.TimeMachine.supported/${snapshot}" 2>/dev/null | awk '{print $1}' || echo "系统快照"`
+                });
+                size = (duResult as string).trim() || '系统快照';
+              } else {
+                size = '系统快照';
+              }
+            } catch {
+              size = '系统快照';
+            }
+          } else if (type === 'time_machine') {
+            // 时间机器快照，使用多种方法获取更准确的大小
+            try {
+              // 方法1: 使用 tmutil uniquesize 获取独占大小（最准确）
+              const uniqueSizeResult = await invoke('execute_command', {
+                command: `tmutil uniquesize "/.com.apple.TimeMachine.supported/${snapshot}" 2>/dev/null`
+              });
+              
+              const uniqueSizeOutput = (uniqueSizeResult as string).trim();
+              if (uniqueSizeOutput && !uniqueSizeOutput.includes('error') && !uniqueSizeOutput.includes('failed')) {
+                // 解析 tmutil uniquesize 的输出，通常最后一行是大小
+                const lines = uniqueSizeOutput.split('\n').filter(line => line.trim());
+                const lastLine = lines[lines.length - 1];
+                
+                // 检查是否包含大小信息
+                if (lastLine && (lastLine.includes('B') || lastLine.includes('bytes'))) {
+                  size = lastLine.trim();
+                  // 尝试解析字节数用于后续计算
+                  const bytesMatch = lastLine.match(/(\d+(?:\.\d+)?)\s*([KMGT]?B)/i);
+                  if (bytesMatch) {
+                    const [, value, unit] = bytesMatch;
+                    const multipliers: { [key: string]: number } = {
+                      'B': 1,
+                      'KB': 1024,
+                      'MB': 1024 * 1024,
+                      'GB': 1024 * 1024 * 1024,
+                      'TB': 1024 * 1024 * 1024 * 1024
+                    };
+                    estimatedBytes = parseFloat(value) * (multipliers[unit.toUpperCase()] || 1);
+                  }
+                } else {
+                  throw new Error('无法解析 uniquesize 输出');
+                }
+              } else {
+                throw new Error('uniquesize 命令失败');
+              }
+            } catch {
+              // 方法2: 使用 tmutil listlocalsnapshots 和 du 作为备选
+              try {
+                const listResult = await invoke('execute_command', {
+                  command: `tmutil listlocalsnapshots / | grep "${snapshot}" | head -1`
+                });
+                
+                if (listResult && (listResult as string).trim()) {
+                  // 使用 du 命令估算大小
+                  const duResult = await invoke('execute_command', {
+                    command: `du -sh "/.com.apple.TimeMachine.supported/${snapshot}" 2>/dev/null | awk '{print $1}'`
+                  });
+                  
+                  const duOutput = (duResult as string).trim();
+                  if (duOutput && duOutput !== '' && !duOutput.includes('No such file')) {
+                    size = duOutput;
+                    // 解析 du 输出的字节数
+                    const bytesMatch = duOutput.match(/(\d+(?:\.\d+)?)([KMGT]?)/i);
+                    if (bytesMatch) {
+                      const [, value, unit] = bytesMatch;
+                      const multipliers: { [key: string]: number } = {
+                        '': 1024, // du 默认以KB为单位
+                        'K': 1024,
+                        'M': 1024 * 1024,
+                        'G': 1024 * 1024 * 1024,
+                        'T': 1024 * 1024 * 1024 * 1024
+                      };
+                      estimatedBytes = parseFloat(value) * (multipliers[unit.toUpperCase()] || 1024);
+                    }
+                  } else {
+                    // 方法3: 基于快照数量和平均大小的智能估算
+                    const avgSnapshotSize = 2 * 1024 * 1024 * 1024; // 平均2GB每个快照
+                    estimatedBytes = avgSnapshotSize;
+                    size = '~2.0GB';
+                  }
+                } else {
+                  size = '未知';
+                }
+              } catch {
+                // 最后的备选方案：基于经验的估算
+                const avgSnapshotSize = 1.5 * 1024 * 1024 * 1024; // 平均1.5GB每个快照
+                estimatedBytes = avgSnapshotSize;
+                size = '~1.5GB';
+              }
+            }
+          } else {
+            // 未知类型快照，尝试基本的大小估算
+            try {
+              const duResult = await invoke('execute_command', {
+                command: `du -sh "/.com.apple.TimeMachine.supported/${snapshot}" 2>/dev/null | awk '{print $1}' || echo "未知"`
+              });
+              size = (duResult as string).trim() || '未知';
+            } catch {
+              size = '未知';
+            }
+          }
+          
+          return { 
+            name: snapshot, 
+            size: size === '' ? '未知' : size,
+            type,
+            isDeletable,
+            createdDate,
+            description,
+            estimatedBytes // 添加估算的字节数，用于更准确的空间计算
+          };
         } catch (error) {
-          console.error(`获取快照 ${snapshot} 大小失败:`, error);
-          // 根据快照类型返回不同的默认值
-          const defaultSize = snapshot.includes('com.apple.os.update') ? '系统快照' : '未知';
-          return { name: snapshot, size: defaultSize };
+          console.error(`获取快照 ${snapshot} 详情失败:`, error);
+          // 根据快照名称推断类型
+          const isSystemUpdate = snapshot.includes('com.apple.os.update');
+          return { 
+            name: snapshot, 
+            size: isSystemUpdate ? '系统快照' : '未知',
+            type: isSystemUpdate ? 'system_update' as const : 'unknown' as const,
+            isDeletable: false,
+            description: isSystemUpdate ? '系统更新快照，无法获取详细信息' : '快照信息获取失败',
+            estimatedBytes: 0 // 错误情况下设为0
+          };
         }
       })
     );

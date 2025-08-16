@@ -1,4 +1,4 @@
-import { CleanupItem, CleanupResult, DiskInfo, WhitelistItem } from '../types';
+import { CleanupItem, CleanupResult, WhitelistItem } from '../types';
 import { executeCleanupCommand } from '../utils/commands';
 import { storageService } from './storageService';
 
@@ -53,6 +53,22 @@ export class CleanupService {
 
   // 验证清理命令的安全性
   validateCommand(command: string): { isValid: boolean; reason?: string } {
+    // 安全命令白名单 - 这些命令被认为是安全的
+    const safePatterns = [
+      /^tmutil\s+thinlocalsnapshots\s+\/\s+\d+\s+\d+$/,  // tmutil 时间机器快照清理
+      /^rm\s+-rf\s+\/Users\/[^/]+\/Library\/Caches\//,  // 用户缓存清理
+      /^rm\s+-rf\s+\/private\/var\/folders\//,  // 临时文件清理
+      /^rm\s+-rf\s+\/Users\/[^/]+\/Downloads\//,  // 下载文件清理
+      /^rm\s+-rf\s+\/Users\/[^/]+\/.Trash\//,  // 废纸篓清理
+    ];
+
+    // 首先检查是否是安全命令
+    for (const pattern of safePatterns) {
+      if (pattern.test(command)) {
+        return { isValid: true };
+      }
+    }
+
     // 危险命令黑名单
     const dangerousPatterns = [
       /rm\s+-rf\s+\/$/,  // 删除根目录
@@ -270,11 +286,23 @@ export class CleanupService {
     const afterDisk = await storageService.collectDiskInfo();
     console.log('💾 [清理服务] 清理后磁盘信息:', JSON.stringify(afterDisk, null, 2));
 
-    // 计算释放的空间（简化处理）
-    const beforeUsed = parseFloat(beforeDisk.used.replace(/[^0-9.]/g, ''));
-    const afterUsed = parseFloat(afterDisk.used.replace(/[^0-9.]/g, ''));
-    const totalCleaned = Math.max(0, beforeUsed - afterUsed);
-    console.log(`📊 [清理服务] 空间释放计算: ${beforeUsed} - ${afterUsed} = ${totalCleaned}GB`);
+    // 计算释放的空间（正确处理单位转换）
+    console.log('📊 [清理服务] 清理后磁盘信息:', JSON.stringify(afterDisk, null, 2));
+    
+    const beforeUsedBytes = this.parseStorageSize(beforeDisk.used);
+    const afterUsedBytes = this.parseStorageSize(afterDisk.used);
+    const totalCleanedBytes = Math.max(0, beforeUsedBytes - afterUsedBytes);
+    const totalCleanedGB = totalCleanedBytes / (1024 ** 3);
+    
+    console.log('🧮 [清理服务] 空间计算详情:', {
+      beforeUsed: beforeDisk.used,
+      afterUsed: afterDisk.used,
+      beforeUsedBytes,
+      afterUsedBytes,
+      totalCleanedBytes,
+      totalCleanedGB: totalCleanedGB.toFixed(3)
+    });
+    console.log(`📊 [清理服务] 空间释放计算: ${beforeDisk.used} - ${afterDisk.used} = ${totalCleanedGB.toFixed(3)}GB`);
 
     if (errors.length > 0) {
       console.warn('⚠️ [清理服务] 清理过程中出现错误:', errors);
@@ -284,7 +312,7 @@ export class CleanupService {
       beforeDiskInfo: beforeDisk,
       afterDiskInfo: afterDisk,
       completedItems: cleanedItems,
-      totalFreedGB: totalCleaned
+      totalFreedGB: totalCleanedGB
     };
     
     console.log('🏁 [清理服务] executeCleanupAsync任务完成，最终结果:', JSON.stringify(result, null, 2));
@@ -399,6 +427,27 @@ export class CleanupService {
     }
 
     return this.formatBytes(totalEstimate);
+  }
+
+  private parseStorageSize(sizeStr: string): number {
+    const match = sizeStr.match(/(\d+(?:\.\d+)?)\s*(B|KB|MB|GB|TB)/i);
+    if (!match) {
+      console.warn('⚠️ [清理服务] 无法解析存储大小:', sizeStr);
+      return 0;
+    }
+    
+    const value = parseFloat(match[1]);
+    const unit = match[2].toUpperCase();
+    
+    const multipliers: { [key: string]: number } = {
+      'B': 1,
+      'KB': 1024,
+      'MB': 1024 ** 2,
+      'GB': 1024 ** 3,
+      'TB': 1024 ** 4
+    };
+    
+    return value * (multipliers[unit] || 1);
   }
 
   private formatBytes(bytes: number): string {

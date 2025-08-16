@@ -10,6 +10,11 @@ export interface DiskInfo {
 export interface SnapshotDetail {
   name: string;
   size: string;
+  type: 'system_update' | 'time_machine' | 'unknown';
+  isDeletable: boolean;
+  createdDate?: string;
+  description?: string;
+  estimatedBytes?: number; // 估算的字节数，用于更准确的空间计算
 }
 
 // 系统数据采集结果
@@ -63,6 +68,7 @@ export interface CleanupItem {
 export interface AnalysisResult {
   diskInfo: DiskInfo;
   aiAnalysis: AIAnalysisResult;
+  systemData?: SystemData;
 }
 
 // 清理结果
