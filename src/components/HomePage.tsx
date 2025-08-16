@@ -110,15 +110,28 @@ const HomePage: React.FC<HomePageProps> = ({ isAnalyzing, onStartAnalysis, onGoT
 
         {/* 数据收集进度提示 */}
         {isAnalyzing && (
-          <div style={{ width: '300px', textAlign: 'center' }}>
+          <div style={{ width: '400px', textAlign: 'center', marginTop: '20px' }}>
             <Text style={{ 
               color: 'white', 
-              fontSize: '16px',
-              fontWeight: 600,
-              textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
+              fontSize: '18px',
+              fontWeight: 700,
+              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.9)',
+              letterSpacing: '1px',
+              display: 'block',
+              marginBottom: '8px'
+            }}>
+              {collectionProgress < 100 ? '🔍 正在深度扫描系统文件' : '🤖 AI智能分析中'}
+            </Text>
+            <Text style={{ 
+              color: 'rgba(255, 255, 255, 0.8)', 
+              fontSize: '14px',
+              fontWeight: 400,
+              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)',
               letterSpacing: '0.5px'
             }}>
-              {collectionProgress < 100 ? '正在收集系统数据...' : '数据收集完成，正在AI分析...'}
+              {collectionProgress < 100 
+                ? `正在收集系统数据和文件信息 (${collectionProgress}%)` 
+                : '正在使用AI技术分析您的系统，为您推荐最佳清理方案'}
             </Text>
           </div>
         )}
