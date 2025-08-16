@@ -2,6 +2,7 @@ import React from 'react';
 import { Result, Card, Statistic, Row, Col, List, Button, Space } from 'antd';
 import { CheckCircleOutlined, ReloadOutlined, TrophyOutlined } from '@ant-design/icons';
 import { CleanupResult as CleanupResultType, DiskInfo } from '../types';
+import resultBg from '../assets/images/backgrounds/result_bg.webp';
 
 interface CleanupResultProps {
   beforeDiskInfo: DiskInfo;
@@ -102,7 +103,7 @@ const CleanupResult: React.FC<CleanupResultProps> = ({
             </span>
           }
           style={{
-            backgroundImage: 'url("/src/assets/images/backgrounds/result_bg.webp")',
+            backgroundImage: `url(${resultBg})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
