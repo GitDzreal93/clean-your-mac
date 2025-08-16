@@ -49,7 +49,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({
     switch (riskLevel) {
       case 'low':
         return {
-          icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+          icon: <CheckCircleOutlined style={{ color: '#ffffff', marginRight: '4px' }} />,
           color: '#52c41a',
           text: '低风险',
           bgColor: '#f6ffed',
@@ -57,7 +57,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({
         };
       case 'medium':
         return {
-          icon: <WarningOutlined style={{ color: '#faad14' }} />,
+          icon: <WarningOutlined style={{ color: '#ffffff', marginRight: '4px' }} />,
           color: '#faad14',
           text: '中等风险',
           bgColor: '#fffbe6',
@@ -65,7 +65,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({
         };
       case 'high':
         return {
-          icon: <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />,
+          icon: <ExclamationCircleOutlined style={{ color: '#ffffff', marginRight: '4px' }} />,
           color: '#ff4d4f',
           text: '高风险',
           bgColor: '#fff2f0',
@@ -73,7 +73,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({
         };
       default:
         return {
-          icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+          icon: <CheckCircleOutlined style={{ color: '#ffffff', marginRight: '4px' }} />,
           color: '#52c41a',
           text: '低风险',
           bgColor: '#f6ffed',
@@ -378,14 +378,10 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({
       </Card>
       
       {/* 固定操作栏 */}
-      <Affix offsetBottom={0}>
+      <Affix offsetBottom={20}>
         <div style={{
-          background: 'rgba(0, 20, 40, 0.95)',
-          backdropFilter: 'blur(15px)',
-          padding: '20px 24px',
-          borderTop: '1px solid rgba(0, 212, 255, 0.3)',
           textAlign: 'center',
-          boxShadow: '0 -4px 20px rgba(0, 212, 255, 0.1)'
+          padding: '0'
         }}>
           <Button
             type="primary"
@@ -393,6 +389,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({
             disabled={selectedItems.length === 0}
             onClick={handleStartCleanup}
             style={{ 
+              marginTop: '20px',
               minWidth: '240px',
               height: '48px',
               fontSize: '16px',
