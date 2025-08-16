@@ -82,13 +82,16 @@ pnpm run tauri build
 <div align="center">
 
 ### 主界面
-![主界面](docs/screenshots/home.png)
+![主界面](images/home.png)
 
 ### AI分析报告
-![分析报告](docs/screenshots/analysis.png)
+![分析报告](images/report.png)
 
 ### 清理结果
-![清理结果](docs/screenshots/result.png)
+![清理结果](images/results.png)
+
+### 应用设置
+![应用设置](images/settings.png)
 
 </div>
 
