@@ -47,14 +47,14 @@
 ### 安装方式
 
 #### 方式一：下载预编译版本
-1. 前往 [Releases](https://github.com/yourusername/clean-your-mac/releases) 页面
+1. 前往 [Releases](https://github.com/GitDzreal93/clean-your-mac/releases) 页面
 2. 下载最新版本的 `.dmg` 文件
 3. 双击安装包并拖拽到应用程序文件夹
 
 #### 方式二：从源码构建
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/clean-your-mac.git
+git clone https://github.com/GitDzreal93/clean-your-mac.git
 cd clean-your-mac
 
 # 安装依赖
@@ -168,9 +168,9 @@ pnpm run type-check
 
 ## 📞 联系我们
 
-- 项目主页: [https://github.com/yourusername/clean-your-mac](https://github.com/yourusername/clean-your-mac)
-- 问题反馈: [Issues](https://github.com/yourusername/clean-your-mac/issues)
-- 功能建议: [Discussions](https://github.com/yourusername/clean-your-mac/discussions)
+- 项目主页: [https://github.com/GitDzreal93/clean-your-mac](https://github.com/GitDzreal93/clean-your-mac)
+- 问题反馈: [Issues](https://github.com/GitDzreal93/clean-your-mac/issues)
+- 功能建议: [Discussions](https://github.com/GitDzreal93/clean-your-mac/discussions)
 
 ---
 
@@ -186,11 +186,25 @@ pnpm run type-check
 
 ### 🌟 Features
 
-- **🤖 AI-Powered Analysis**: Intelligent disk analysis and optimization recommendations
-- **📸 Smart Snapshot Management**: Automatic classification and safe cleanup of system snapshots
-- **🎯 Precise Cleaning**: Multi-type file cleanup with whitelist protection
-- **🎨 Modern UI**: Beautiful interface built with React and Ant Design
-- **⚡ Native Performance**: Powered by Tauri for optimal performance
+#### 🤖 AI-Powered Analysis
+- **Intelligent Disk Analysis**: AI-driven storage space analysis and optimization recommendations
+- **Personalized Cleanup Plans**: Customized cleaning strategies based on usage patterns
+- **Risk Assessment**: Smart evaluation of cleanup operation safety
+
+#### 📸 Snapshot Management
+- **Smart Snapshot Classification**: Automatically distinguish between system update snapshots and Time Machine snapshots
+- **Safe Cleanup**: Use `tmutil thinlocalsnapshots` for secure Time Machine snapshot cleanup
+- **Space Estimation**: Accurate estimation of disk space occupied by snapshots
+
+#### 🎯 Precise Cleaning
+- **Multi-type File Cleanup**: Cache, logs, temporary files, downloads, and more
+- **Whitelist Protection**: Protect important files and applications from accidental deletion
+- **Real-time Progress**: Visualized cleanup process with real-time progress and results
+
+#### 🎨 Modern Interface
+- **Beautiful UI**: Modern interface design based on Ant Design
+- **Smooth Experience**: Responsive user interface built with React + TypeScript
+- **Native Performance**: Native application performance provided by Tauri framework
 
 ### 🚀 Quick Start
 
@@ -198,17 +212,17 @@ pnpm run type-check
 - macOS 10.15 or later
 - At least 100MB available disk space
 
-#### Installation
+#### Installation Methods
 
-1. Download the latest `.dmg` file from [Releases](https://github.com/yourusername/clean-your-mac/releases)
-2. Double-click the installer and drag to Applications folder
-3. Launch CleanYourMac from Applications
+##### Method 1: Download Pre-compiled Version
+1. Go to [Releases](https://github.com/GitDzreal93/clean-your-mac/releases) page
+2. Download the latest `.dmg` file
+3. Double-click the installer and drag to Applications folder
 
-#### Build from Source
-
+##### Method 2: Build from Source
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/clean-your-mac.git
+git clone https://github.com/GitDzreal93/clean-your-mac.git
 cd clean-your-mac
 
 # Install dependencies
@@ -223,25 +237,132 @@ pnpm run tauri build
 
 ### 🛠️ Tech Stack
 
-- **Frontend**: React 19.1.0 + TypeScript
-- **UI Library**: Ant Design 5.27.0
+- **Frontend Framework**: React 19.1.0 + TypeScript
+- **UI Component Library**: Ant Design 5.27.0
 - **Desktop Framework**: Tauri 2.x
-- **Backend**: Rust
+- **Backend Language**: Rust
 - **State Management**: Zustand
-- **Charts**: ECharts
+- **Chart Library**: ECharts
 - **Build Tool**: Vite
+
+### 📱 Screenshots
+
+<div align="center">
+
+#### Home Interface
+![Home Interface](images/home.png)
+
+#### AI Analysis Report
+![Analysis Report](images/report.png)
+
+#### Cleanup Results
+![Cleanup Results](images/results.png)
+
+#### Application Settings
+![Application Settings](images/settings.png)
+
+</div>
+
+### 🔧 Development Guide
+
+#### Environment Setup
+```bash
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install Node.js (recommended using nvm)
+nvm install 18
+nvm use 18
+
+# Install pnpm
+npm install -g pnpm
+
+# Install Tauri CLI
+cargo install tauri-cli
+```
+
+#### Project Structure
+```
+clean-your-mac/
+├── src/                    # React frontend source code
+│   ├── components/         # React components
+│   ├── services/          # Business logic services
+│   ├── types/             # TypeScript type definitions
+│   └── assets/            # Static resources
+├── src-tauri/             # Tauri backend source code
+│   ├── src/               # Rust source code
+│   ├── icons/             # Application icons
+│   └── Cargo.toml         # Rust dependency configuration
+├── public/                # Public static files
+└── dist/                  # Build output directory
+```
+
+#### Development Commands
+```bash
+# Start development server
+pnpm run tauri dev
+
+# Build frontend
+pnpm run build
+
+# Build application
+pnpm run tauri build
+
+# Type checking
+pnpm run type-check
+```
 
 ### 🤝 Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+We welcome all forms of contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+#### How to Contribute
+1. Fork this repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Create a Pull Request
+
+### ☕ Support
+
+If you find this project helpful, consider buying me a coffee! Your support helps keep this project alive and growing.
+
+<div align="center">
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/xjpp228)
+
+<a href="https://buymeacoffee.com/xjpp228" target="_blank">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" >
+</a>
+
+**Or scan the QR code:**
+
+<img src="images/bmc_qr.png" alt="Buy Me A Coffee QR Code" width="200" />
+
+</div>
 
 ### 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+### 🙏 Acknowledgments
+
+- [Tauri](https://tauri.app/) - Cross-platform desktop application framework
+- [React](https://reactjs.org/) - User interface library
+- [Ant Design](https://ant.design/) - Enterprise-class UI design language
+- [Rust](https://www.rust-lang.org/) - Systems programming language
+
+### 📞 Contact Us
+
+- Project Homepage: [https://github.com/GitDzreal93/clean-your-mac](https://github.com/GitDzreal93/clean-your-mac)
+- Bug Reports: [Issues](https://github.com/GitDzreal93/clean-your-mac/issues)
+- Feature Requests: [Discussions](https://github.com/GitDzreal93/clean-your-mac/discussions)
+
 ---
 
 <div align="center">
+
+**If this project helps you, please give us a ⭐️**
 
 **Made with ❤️ for Mac users worldwide**
 
