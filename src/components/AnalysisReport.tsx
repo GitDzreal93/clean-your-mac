@@ -239,61 +239,138 @@ const AnalysisReport: React.FC<AnalysisReportProps> = ({
             return (
               <List.Item
                 style={{
-                  background: riskConfig.bgColor,
-                  border: `1px solid ${riskConfig.borderColor}`,
-                  borderRadius: '8px',
-                  marginBottom: '8px',
-                  padding: '16px'
+                  background: 'rgba(0, 20, 40, 0.6)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(0, 212, 255, 0.3)',
+                  borderRadius: '12px',
+                  marginBottom: '16px',
+                  padding: '20px',
+                  boxShadow: '0 4px 20px rgba(0, 212, 255, 0.1)',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
                 }}
-                actions={[
-                  <Space key="icons">
-                    <span style={{ color: riskConfig.color, fontSize: '16px' }}>
-                      {riskConfig.icon}
-                    </span>
-                    {item.estimated_size_gb && item.estimated_size_gb >= 0 && (
-                       <Tag color="blue">
-                         {item.estimated_size_gb.toFixed(1)} GB
-                       </Tag>
-                     )}
-                  </Space>
-                ]}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 212, 255, 0.2)';
+                  e.currentTarget.style.borderColor = 'rgba(0, 212, 255, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 212, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(0, 212, 255, 0.3)';
+                }}
+                onClick={() => handleItemCheck(item, !isChecked)}
               >
-                <List.Item.Meta
-                  avatar={
+                <div style={{ display: 'flex', alignItems: 'flex-start', width: '100%' }}>
+                  {/* 左侧复选框 */}
+                  <div style={{ marginRight: '16px', marginTop: '2px' }}>
                     <Checkbox
                       checked={isChecked}
-                      onChange={(e) => handleItemCheck(item, e.target.checked)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleItemCheck(item, e.target.checked);
+                      }}
+                      style={{ transform: 'scale(1.2)' }}
                     />
-                  }
-                  title={
-                    <Space>
-                      <span style={{ color: '#ffffff', fontSize: '16px', fontWeight: 600 }}>
+                  </div>
+                  
+                  {/* 中间内容区域 */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* 标题行 */}
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                      <span style={{ 
+                        color: '#ffffff', 
+                        fontSize: '18px', 
+                        fontWeight: 700,
+                        lineHeight: '1.2',
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+                      }}>
                         {item.title}
                       </span>
-                      {item.risk_level === 'high' && (
-                         <Tag color="red" style={{ fontSize: '12px', fontWeight: 500 }}>
-                           需手动确认
-                         </Tag>
-                       )}
-                    </Space>
-                  }
-                  description={
-                    <div style={{ color: 'rgba(255, 255, 255, 0.8)', marginTop: '4px', fontSize: '14px' }}>
-                      {item.description}
-                      {item.risk_level === 'high' && (
-                        <div style={{ 
-                          color: '#ff6b6b', 
+                      
+                      {/* 风险等级标签 */}
+                      <Tag 
+                        color={riskConfig.color} 
+                        style={{ 
                           fontSize: '12px', 
-                          marginTop: '4px',
-                          fontWeight: '500',
-                          textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
-                        }}>
-                          ⚠️ 此操作涉及用户文件，请仔细确认后再执行
-                        </div>
+                          fontWeight: 600,
+                          borderRadius: '6px',
+                          padding: '2px 8px',
+                          border: 'none'
+                        }}
+                      >
+                        {riskConfig.icon} {riskConfig.text}
+                      </Tag>
+                      
+                      {/* 高风险特殊标签 */}
+                      {item.risk_level === 'high' && (
+                        <Tag 
+                          color="red" 
+                          style={{ 
+                            fontSize: '12px', 
+                            fontWeight: 600,
+                            borderRadius: '6px',
+                            padding: '2px 8px',
+                            border: 'none',
+                            backgroundColor: '#ff4d4f',
+                            color: 'white'
+                          }}
+                        >
+                          需手动确认
+                        </Tag>
                       )}
                     </div>
-                  }
-                />
+                    
+                    {/* 描述文本 */}
+                    <div style={{ 
+                      color: 'rgba(255, 255, 255, 0.8)', 
+                      fontSize: '15px',
+                      lineHeight: '1.5',
+                      marginBottom: item.risk_level === 'high' ? '8px' : '0',
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+                    }}>
+                      {item.description}
+                    </div>
+                    
+                    {/* 高风险警告 */}
+                    {item.risk_level === 'high' && (
+                      <div style={{ 
+                        color: '#ff6b6b', 
+                        fontSize: '13px', 
+                        fontWeight: 600,
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(255, 107, 107, 0.3)',
+                        marginTop: '8px',
+                        backdropFilter: 'blur(4px)'
+                      }}>
+                        ⚠️ 此操作涉及用户文件，请仔细确认后再执行
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* 右侧大小标签 */}
+                  {item.estimated_size_gb && item.estimated_size_gb >= 0 && (
+                    <div style={{ marginLeft: '16px', alignSelf: 'flex-start' }}>
+                      <Tag 
+                        style={{ 
+                          fontSize: '14px', 
+                          fontWeight: 700,
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(0, 212, 255, 0.5)',
+                          backgroundColor: 'rgba(0, 212, 255, 0.2)',
+                          color: '#00d4ff',
+                          backdropFilter: 'blur(4px)',
+                          textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+                        }}
+                      >
+                        {item.estimated_size_gb.toFixed(1)} GB
+                      </Tag>
+                    </div>
+                  )}
+                </div>
               </List.Item>
             );
           }}
