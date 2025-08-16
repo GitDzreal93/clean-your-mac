@@ -155,6 +155,28 @@ pnpm run type-check
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 创建 Pull Request
 
+## 💖 支持
+
+如果这个项目对你有帮助，请考虑支持一下！你的支持是我们持续改进的动力。
+
+<div align="center">
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/xjpp228)
+
+<a href="https://buymeacoffee.com/xjpp228" target="_blank">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" >
+</a>
+
+**或者扫描二维码:**
+
+<img src="images/bmc_qr.png" alt="Buy Me A Coffee QR Code" width="200" />
+
+**微信赞赏:**
+
+<img src="images/wx.jpg" alt="微信赞赏码" width="200" />
+
+</div>
+
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
